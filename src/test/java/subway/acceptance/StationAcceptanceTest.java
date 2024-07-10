@@ -1,17 +1,14 @@
-package subway;
+package subway.acceptance;
 
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
-import subway.internal.DatabaseCleaner;
+import subway.internal.BaseTestSetup;
+import subway.internal.StationApiResponseExtractor;
 import subway.internal.StationTestApi;
 
 import java.util.List;
@@ -19,17 +16,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("지하철역 관련 기능")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-public class StationAcceptanceTest {
-
-    @Autowired
-    private ApplicationContext applicationContext;
-
-    @AfterEach
-    public void cleanDatabase() {
-        DatabaseCleaner.clean(applicationContext);
-    }
-
+public class StationAcceptanceTest extends BaseTestSetup {
     /**
      * When 지하철역을 생성하면
      * Then 지하철역이 생성된다
@@ -46,7 +33,7 @@ public class StationAcceptanceTest {
         assertThat(response.statusCode()).isEqualTo(HttpStatus.CREATED.value());
 
         // then
-        List<String> stationNames = StationTestApi.showStations().jsonPath().getList("name", String.class);
+        List<String> stationNames = StationApiResponseExtractor.extractNames(StationTestApi.showStations());
         assertThat(stationNames).containsAnyOf(name);
     }
 
@@ -70,7 +57,7 @@ public class StationAcceptanceTest {
         assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
 
         // then
-        List<String> stationNames = response.jsonPath().getList("name", String.class);
+        List<String> stationNames = StationApiResponseExtractor.extractNames(response);
         assertThat(stationNames.size()).isEqualTo(2);
         assertThat(stationNames).containsExactlyInAnyOrder(name1, name2);
     }
@@ -85,7 +72,7 @@ public class StationAcceptanceTest {
     @ValueSource(strings = {"강남역", "역삼역", "삼성역"})
     void deleteStation(String name) {
         // given
-        long id = StationTestApi.createStation(name).jsonPath().getLong("id");
+        long id = StationApiResponseExtractor.Single.extractId(StationTestApi.createStation(name));
 
         // when
         ExtractableResponse<Response> response = StationTestApi.deleteStation(id);
@@ -94,7 +81,7 @@ public class StationAcceptanceTest {
         assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT.value());
 
         // then
-        List<String> stationNames = StationTestApi.showStations().jsonPath().getList("name", String.class);
+        List<String> stationNames = StationApiResponseExtractor.extractNames(StationTestApi.showStations());
         assertThat(stationNames).doesNotContain(name);
     }
 }
