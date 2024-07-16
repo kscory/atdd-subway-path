@@ -5,9 +5,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.params.ParameterizedTest;
 import subway.domain.command.LineCommand;
-import subway.domain.entity.Line;
+import subway.domain.entity.line.Line;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
 
 public class LineTest {
     @Nested
@@ -20,11 +21,16 @@ public class LineTest {
             Line actual = Line.init(command);
 
             // then
-            assertThat(actual.getName()).isEqualTo(command.getName());
-            assertThat(actual.getColor()).isEqualTo(command.getColor());
-            assertThat(actual.getUpStationId()).isEqualTo(command.getUpStationId());
-            assertThat(actual.getDownStationId()).isEqualTo(command.getDownStationId());
-            assertThat(actual.getDistance()).isEqualTo(command.getDistance());
+            assertAll("assert init",
+                    () -> assertThat(actual.getName()).isEqualTo(command.getName()),
+                    () -> assertThat(actual.getColor()).isEqualTo(command.getColor()),
+
+                    // section
+                    () -> assertThat(actual.getSections().size()).isEqualTo(1),
+                    () -> assertThat(actual.getSections().getLastSection().getUpStationId()).isEqualTo(command.getUpStationId()),
+                    () -> assertThat(actual.getSections().getLastSection().getDownStationId()).isEqualTo(command.getDownStationId()),
+                    () -> assertThat(actual.getSections().getLastSection().getDistance()).isEqualTo(command.getDistance())
+            );
         }
     }
 
@@ -44,9 +50,6 @@ public class LineTest {
             // then
             assertThat(sut.getName()).isEqualTo(command.getName());
             assertThat(sut.getColor()).isEqualTo(command.getColor());
-            assertThat(sut.getUpStationId()).isEqualTo(command.getUpStationId());
-            assertThat(sut.getDownStationId()).isEqualTo(command.getDownStationId());
-            assertThat(sut.getDistance()).isEqualTo(command.getDistance());
         }
     }
 }

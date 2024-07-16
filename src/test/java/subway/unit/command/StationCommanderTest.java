@@ -6,9 +6,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import subway.domain.command.StationCommander;
-import subway.domain.entity.Station;
+import subway.domain.entity.station.Station;
 import subway.domain.repository.StationRepository;
-import subway.internal.BaseTestSetup;
+import subway.setup.BaseTestSetup;
 
 import java.util.Optional;
 
@@ -32,8 +32,8 @@ public class StationCommanderTest extends BaseTestSetup {
             Long id = sut.createStation(name);
 
             // then
-            Optional<Station> actual = stationRepository.findById(id);
-            assertThat(actual.get().getName()).isEqualTo(name);
+            Station actual = stationRepository.findByIdOrThrow(id);
+            assertThat(actual.getName()).isEqualTo(name);
         }
     }
 

@@ -23,8 +23,23 @@ public class LineCommand {
         private Long id;
         private String name;
         private String color;
+    }
+
+    @ToString
+    @Getter
+    @AllArgsConstructor
+    public static class AddSection {
+        private Long lineId;
         private Long upStationId;
         private Long downStationId;
         private Long distance;
+    }
+
+    @ToString
+    @Getter
+    @AllArgsConstructor
+    public static class DeleteSection {
+        private Long lineId;
+        private Long stationId;
     }
 }

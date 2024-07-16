@@ -1,27 +1,31 @@
 package subway.unit.command;
 
 import autoparams.AutoSource;
-import autoparams.Repeat;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.util.Pair;
 import subway.domain.command.LineCommand;
 import subway.domain.command.LineCommander;
-import subway.domain.entity.Line;
-import subway.domain.entity.Station;
+import subway.domain.entity.line.Line;
+import subway.domain.entity.station.Station;
 import subway.domain.exception.SubwayDomainException;
 import subway.domain.exception.SubwayDomainExceptionType;
 import subway.domain.repository.LineRepository;
-import subway.domain.repository.StationRepository;
-import subway.fixtures.LineFixture;
-import subway.internal.BaseTestSetup;
+import subway.setup.BaseTestSetup;
+import subway.unit.testing.LineDbUtil;
+import subway.unit.testing.StationDbUtil;
 
+import java.lang.reflect.Field;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.junit.jupiter.api.Assertions.assertAll;
 
 public class LineCommanderTest extends BaseTestSetup {
 
@@ -32,88 +36,81 @@ public class LineCommanderTest extends BaseTestSetup {
     private LineRepository lineRepository;
 
     @Autowired
-    private StationRepository stationRepository;
+    private StationDbUtil stationDbUtil;
 
-    private Pair<Station, Station> addUpDownStation() {
-        Station upStation = new Station("삼성역");
-        Station downStation = new Station("잠실역");
-        stationRepository.save(upStation);
-        stationRepository.save(downStation);
-        return Pair.of(upStation, downStation);
-    }
-
-    private Line addLine(Long upStationId, Long downStationId) {
-        Line line = LineFixture.prepareLineOne(upStationId, downStationId);
-        lineRepository.save(line);
-        return line;
-    }
+    @Autowired
+    private LineDbUtil lineDbUtil;
 
     @Nested
     @DisplayName("createLine")
     class CreateLineTest {
+        public void changeUpDownStationField(LineCommand.CreateLine command, Long upStationId, Long downStationId) {
+            try {
+                Field upField = command.getClass().getDeclaredField("upStationId");
+                upField.setAccessible(true);
+                upField.set(command, upStationId);
+
+                Field downField = command.getClass().getDeclaredField("downStationId");
+                downField.setAccessible(true);
+                downField.set(command, downStationId);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
         @ParameterizedTest
         @AutoSource
-        @Repeat(5)
-        public void sut_creates_line(String lineName, String color, Long distance) {
+        public void sut_throws_if_not_found_upStation(LineCommand.CreateLine command) {
             // given
-            Pair<Station, Station> upDownStation = addUpDownStation();
-            LineCommand.CreateLine command = new LineCommand.CreateLine(
-                    lineName,
-                    color,
-                    upDownStation.getFirst().getId(),
-                    upDownStation.getSecond().getId(),
-                    distance
-            );
+            List<Station> stations = stationDbUtil.insertStations("삼성역", "잠실역");
+            changeUpDownStationField(command, 123213L, stations.get(1).getId());
+
+            // when
+            SubwayDomainException actual = (SubwayDomainException) catchThrowable(() -> sut.createLine(command));
+
+            // then
+            assertThat(actual.getExceptionType()).isEqualTo(SubwayDomainExceptionType.NOT_FOUND_STATION);
+        }
+
+        @ParameterizedTest
+        @AutoSource
+        public void sut_throws_if_not_found_downStation(LineCommand.CreateLine command) {
+            // given
+            List<Station> stations = stationDbUtil.insertStations("삼성역", "잠실역");
+            changeUpDownStationField(command, stations.get(0).getId(), 123213L);
+
+            // when
+            SubwayDomainException actual = (SubwayDomainException) catchThrowable(() -> sut.createLine(command));
+
+            // then
+            assertThat(actual.getExceptionType()).isEqualTo(SubwayDomainExceptionType.NOT_FOUND_STATION);
+        }
+
+        @ParameterizedTest
+        @AutoSource
+        public void sut_creates_line(LineCommand.CreateLine command) {
+            // given
+            List<Station> stations = stationDbUtil.insertStations("삼성역", "잠실역");
+            changeUpDownStationField(command, stations.get(0).getId(), stations.get(1).getId());
 
             // when
             Long id = sut.createLine(command);
 
             // then
-            Optional<Line> actual = lineRepository.findById(id);
-            assertThat(actual.get().getName()).isEqualTo(command.getName());
-            assertThat(actual.get().getColor()).isEqualTo(command.getColor());
-        }
+            transactionTemplate.execute(status -> {
+                Line actual = lineRepository.findByIdOrThrow(id);
+                assertAll("assert created line",
+                        () -> assertThat(actual.getName()).isEqualTo(command.getName()),
+                        () -> assertThat(actual.getColor()).isEqualTo(command.getColor()),
 
-        @ParameterizedTest
-        @AutoSource
-        @Repeat(5)
-        public void sut_throws_if_not_found_upStation(String lineName, String color, Long distance) {
-            // given
-            Pair<Station, Station> upDownStation = addUpDownStation();
-            LineCommand.CreateLine command = new LineCommand.CreateLine(
-                    lineName,
-                    color,
-                    123213L,
-                    upDownStation.getSecond().getId(),
-                    distance
-            );
-
-            // when
-            SubwayDomainException actual = (SubwayDomainException) catchThrowable(() -> sut.createLine(command));
-
-            // then
-            assertThat(actual.getExceptionType()).isEqualTo(SubwayDomainExceptionType.NOT_FOUND_STATION);
-        }
-
-        @ParameterizedTest
-        @AutoSource
-        @Repeat(5)
-        public void sut_throws_if_not_found_downStation(String lineName, String color, Long distance) {
-            // given
-            Pair<Station, Station> upDownStation = addUpDownStation();
-            LineCommand.CreateLine command = new LineCommand.CreateLine(
-                    lineName,
-                    color,
-                    upDownStation.getFirst().getId(),
-                    123213L,
-                    distance
-            );
-
-            // when
-            SubwayDomainException actual = (SubwayDomainException) catchThrowable(() -> sut.createLine(command));
-
-            // then
-            assertThat(actual.getExceptionType()).isEqualTo(SubwayDomainExceptionType.NOT_FOUND_STATION);
+                        // section
+                        () -> assertThat(actual.getSections().size()).isEqualTo(1),
+                        () -> assertThat(actual.getSections().getLastSection().getUpStationId()).isEqualTo(command.getUpStationId()),
+                        () -> assertThat(actual.getSections().getLastSection().getDownStationId()).isEqualTo(command.getDownStationId()),
+                        () -> assertThat(actual.getSections().getLastSection().getDistance()).isEqualTo(command.getDistance())
+                );
+                return null;
+            });
         }
     }
 
@@ -122,83 +119,28 @@ public class LineCommanderTest extends BaseTestSetup {
     class UpdateLineTest {
         @ParameterizedTest
         @AutoSource
-        @Repeat(5)
-        public void sut_updates_line(String lineName, String color, Long distance) {
+        public void sut_updates_line(String lineName, String color) {
             // given
-            Line line = addLine(111L, 211L);
-            Pair<Station, Station> upDownStation = addUpDownStation();
-
-            LineCommand.UpdateLine command = new LineCommand.UpdateLine(
-                    line.getId(),
-                    lineName, color,
-                    upDownStation.getFirst().getId(),
-                    upDownStation.getSecond().getId(),
-                    distance
-            );
+            Line line = lineDbUtil.insertLine(111L, 211L);
+            LineCommand.UpdateLine command = new LineCommand.UpdateLine(line.getId(), lineName, color);
 
             // when
             sut.updateLine(command);
 
             // then
-            Optional<Line> actual = lineRepository.findById(command.getId());
-            assertThat(actual.get().getName()).isEqualTo(command.getName());
-            assertThat(actual.get().getColor()).isEqualTo(command.getColor());
+            Line actual = lineRepository.findByIdOrThrow(command.getId());
+            assertThat(actual.getName()).isEqualTo(command.getName());
+            assertThat(actual.getColor()).isEqualTo(command.getColor());
         }
 
         @ParameterizedTest
         @AutoSource
-        public void sut_throws_error_if_not_found_line(LineCommand.UpdateLine command) {
+        public void sut_throws_if_not_found_line(LineCommand.UpdateLine command) {
             // when
             SubwayDomainException actual = (SubwayDomainException) catchThrowable(() -> sut.updateLine(command));
 
             // then
             assertThat(actual.getExceptionType()).isEqualTo(SubwayDomainExceptionType.NOT_FOUND_LINE);
-        }
-
-        @ParameterizedTest
-        @AutoSource
-        @Repeat(5)
-        public void sut_throws_if_not_found_upStation(String lineName, String color, Long distance) {
-            // given
-            Line line = addLine(111L, 211L);
-            Pair<Station, Station> upDownStation = addUpDownStation();
-
-            LineCommand.UpdateLine command = new LineCommand.UpdateLine(
-                    line.getId(),
-                    lineName, color,
-                    123123L,
-                    upDownStation.getSecond().getId(),
-                    distance
-            );
-
-            // when
-            SubwayDomainException actual = (SubwayDomainException) catchThrowable(() -> sut.updateLine(command));
-
-            // then
-            assertThat(actual.getExceptionType()).isEqualTo(SubwayDomainExceptionType.NOT_FOUND_STATION);
-        }
-
-        @ParameterizedTest
-        @AutoSource
-        @Repeat(5)
-        public void sut_throws_if_not_found_downStation(String lineName, String color, Long distance) {
-            // given
-            Line line = addLine(111L, 211L);
-            Pair<Station, Station> upDownStation = addUpDownStation();
-
-            LineCommand.UpdateLine command = new LineCommand.UpdateLine(
-                    line.getId(),
-                    lineName, color,
-                    upDownStation.getFirst().getId(),
-                    123123L,
-                    distance
-            );
-
-            // when
-            SubwayDomainException actual = (SubwayDomainException) catchThrowable(() -> sut.updateLine(command));
-
-            // then
-            assertThat(actual.getExceptionType()).isEqualTo(SubwayDomainExceptionType.NOT_FOUND_STATION);
         }
     }
 
@@ -207,10 +149,9 @@ public class LineCommanderTest extends BaseTestSetup {
     class DeleteLineTest {
         @ParameterizedTest
         @AutoSource
-        @Repeat(5)
         public void sut_deletes_line() {
             // given
-            Line line = addLine(111L, 211L);
+            Line line = lineDbUtil.insertLine(111L, 211L);
 
             // when
             sut.deleteLineById(line.getId());
@@ -222,12 +163,211 @@ public class LineCommanderTest extends BaseTestSetup {
 
         @ParameterizedTest
         @AutoSource
-        public void sut_throws_error_if_not_found_line(Long id) {
+        public void sut_throws_if_not_found_line(Long id) {
             // when
             SubwayDomainException actual = (SubwayDomainException) catchThrowable(() -> sut.deleteLineById(id));
 
             // then
             assertThat(actual.getExceptionType()).isEqualTo(SubwayDomainExceptionType.NOT_FOUND_LINE);
+        }
+    }
+
+    @Nested
+    @DisplayName("addSection")
+    class AddSectionTest {
+        @Test
+        public void sut_throws_if_not_found_line() {
+            // given
+            List<Station> upDownStation = stationDbUtil.insertStations("삼성역", "잠실역");
+            LineCommand.AddSection command = new LineCommand.AddSection(
+                    1728321378313L,
+                    upDownStation.get(0).getId(),
+                    upDownStation.get(1).getId(),
+                    20L
+            );
+
+            // when
+            SubwayDomainException actual = (SubwayDomainException) catchThrowable(() -> sut.addSection(command));
+
+            // then
+            assertThat(actual.getExceptionType()).isEqualTo(SubwayDomainExceptionType.NOT_FOUND_LINE);
+        }
+
+        @Test
+        public void sut_throws_if_not_found_upStation() {
+            // given
+            List<Station> stations = stationDbUtil.insertStations("삼성역", "잠실역");
+            Line line = lineDbUtil.insertLine(stations.get(0).getId(), stations.get(1).getId());
+            LineCommand.AddSection command = new LineCommand.AddSection(
+                    line.getId(),
+                    17238123L,
+                    stations.get(1).getId(),
+                    20L
+            );
+
+            // when
+            SubwayDomainException actual = (SubwayDomainException) catchThrowable(() -> sut.addSection(command));
+
+            // then
+            assertThat(actual.getExceptionType()).isEqualTo(SubwayDomainExceptionType.NOT_FOUND_STATION);
+        }
+
+        @Test
+        public void sut_throws_if_not_found_downStation() {
+            // given
+            List<Station> stations = stationDbUtil.insertStations("삼성역", "잠실역");
+            Line line = lineDbUtil.insertLine(stations.get(0).getId(), stations.get(1).getId());
+            LineCommand.AddSection command = new LineCommand.AddSection(
+                    line.getId(),
+                    stations.get(0).getId(),
+                    12783L,
+                    20L
+            );
+
+            // when
+            SubwayDomainException actual = (SubwayDomainException) catchThrowable(() -> sut.addSection(command));
+
+            // then
+            assertThat(actual.getExceptionType()).isEqualTo(SubwayDomainExceptionType.NOT_FOUND_STATION);
+        }
+
+        @Test
+        public void sut_throws_if_upStation_not_equal_to_last_line_downStation() {
+            // given
+            List<Station> stations = stationDbUtil.insertStations("삼성역", "잠실역", "선릉역", "강남역");
+            Line line = lineDbUtil.insertLine(stations.get(0).getId(), stations.get(1).getId());
+            LineCommand.AddSection command = new LineCommand.AddSection(
+                    line.getId(),
+                    stations.get(0).getId(),
+                    stations.get(2).getId(),
+                    20L
+            );
+
+            // when
+            SubwayDomainException actual = (SubwayDomainException) catchThrowable(() -> sut.addSection(command));
+
+            // then
+            assertThat(actual.getExceptionType()).isEqualTo(SubwayDomainExceptionType.INVALID_UP_STATION);
+        }
+
+        @Test
+        public void sut_throws_if_downStation_already_existed() {
+            // given
+            List<Station> stations = stationDbUtil.insertStations("삼성역", "잠실역", "선릉역", "강남역");
+            Line line = lineDbUtil.insertLine(stations.get(0).getId(), stations.get(1).getId());
+            LineCommand.AddSection command = new LineCommand.AddSection(
+                    line.getId(),
+                    stations.get(1).getId(),
+                    stations.get(0).getId(),
+                    20L
+            );
+
+            // when
+            SubwayDomainException actual = (SubwayDomainException) catchThrowable(() -> sut.addSection(command));
+
+            // then
+            assertThat(actual.getExceptionType()).isEqualTo(SubwayDomainExceptionType.INVALID_DOWN_STATION);
+        }
+
+        @Test
+        public void sut_add_section() {
+            // given
+            List<Station> stations = stationDbUtil.insertStations("삼성역", "잠실역", "선릉역", "강남역");
+            Line line = lineDbUtil.insertLine(stations.get(0).getId(), stations.get(1).getId());
+            LineCommand.AddSection command = new LineCommand.AddSection(
+                    line.getId(),
+                    stations.get(1).getId(),
+                    stations.get(2).getId(),
+                    20L
+            );
+
+            // when
+            sut.addSection(command);
+
+            // then
+            transactionTemplate.execute(status -> {
+                Line actual = lineRepository.findByIdOrThrow(line.getId());
+                assertAll("assert section added",
+                        () -> assertThat(actual.getSections().size()).isEqualTo(2),
+                        () -> assertThat(actual.getSections().getLastSection().getUpStationId()).isEqualTo(command.getUpStationId()),
+                        () -> assertThat(actual.getSections().getLastSection().getDownStationId()).isEqualTo(command.getDownStationId()),
+                        () -> assertThat(actual.getSections().getLastSection().getDistance()).isEqualTo(command.getDistance())
+                );
+                return null;
+            });
+        }
+    }
+
+    @Nested
+    @DisplayName("deleteSection")
+    class DeleteSectionTest {
+        @Test
+        public void sut_throws_if_not_found_line() {
+            // given
+            List<Station> stations = stationDbUtil.insertStations("삼성역", "잠실역", "선릉역", "강남역");
+
+            LineCommand.DeleteSection command = new LineCommand.DeleteSection(1728321378313L, stations.get(0).getId());
+
+            // when
+            SubwayDomainException actual = (SubwayDomainException) catchThrowable(() -> sut.deleteSection(command));
+
+            // then
+            assertThat(actual.getExceptionType()).isEqualTo(SubwayDomainExceptionType.NOT_FOUND_LINE);
+        }
+
+        @Test
+        public void sut_throws_if_section_size_one() {
+            // given
+            List<Station> stations = stationDbUtil.insertStations("삼성역", "잠실역", "선릉역", "강남역");
+            Line line = lineDbUtil.insertLine(stations.get(0).getId(), stations.get(1).getId());
+
+            LineCommand.DeleteSection command = new LineCommand.DeleteSection(line.getId(), stations.get(1).getId());
+
+            // when
+            SubwayDomainException actual = (SubwayDomainException) catchThrowable(() -> sut.deleteSection(command));
+
+            // then
+            assertThat(actual.getExceptionType()).isEqualTo(SubwayDomainExceptionType.INVALID_SECTION_SIZE);
+        }
+
+        @Test
+        public void sut_throws_if_station_not_equal_to_last_line_downStation() {
+            // given
+            List<Station> stations = stationDbUtil.insertStations("삼성역", "잠실역", "선릉역", "강남역");
+            Line line = lineDbUtil.insertLine(stations.get(0).getId(), stations.get(1).getId());
+            lineDbUtil.insertSection(line, stations.get(1).getId(), stations.get(2).getId(), 20L);
+
+            LineCommand.DeleteSection command = new LineCommand.DeleteSection(line.getId(), stations.get(1).getId());
+
+            // when
+            SubwayDomainException actual = (SubwayDomainException) catchThrowable(() -> sut.deleteSection(command));
+
+            // then
+            assertThat(actual.getExceptionType()).isEqualTo(SubwayDomainExceptionType.INVALID_STATION);
+        }
+
+        @Test
+        public void sut_delete_section() {
+            // given
+            List<Station> stations = stationDbUtil.insertStations("삼성역", "잠실역", "선릉역", "강남역");
+            Line line = lineDbUtil.insertLine(stations.get(0).getId(), stations.get(1).getId());
+            lineDbUtil.insertSection(line, stations.get(1).getId(), stations.get(2).getId(), 20L);
+
+            LineCommand.DeleteSection command = new LineCommand.DeleteSection(line.getId(), stations.get(2).getId());
+
+            // when
+            sut.deleteSection(command);
+
+            // then
+            transactionTemplate.execute(status -> {
+                Line actual = lineRepository.findByIdOrThrow(line.getId());
+                assertThat(actual.getSections().size()).isEqualTo(1);
+                assertThat(actual.getSections().stream()
+                        .flatMap(section -> Stream.of(section.getUpStationId(), section.getDownStationId()))
+                        .collect(Collectors.toList())
+                ).doesNotContain(stations.get(2).getId());
+                return null;
+            });
         }
     }
 }
