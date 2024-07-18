@@ -36,4 +36,8 @@ public class LineSection {
         this.distance = distance;
         this.position = position;
     }
+
+    public void increasePosition() {
+        position++;
+    }
 }

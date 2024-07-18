@@ -12,6 +12,8 @@ import subway.domain.exception.SubwayDomainException;
 import subway.domain.exception.SubwayDomainExceptionType;
 import subway.fixtures.LineFixture;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -104,8 +106,7 @@ public class LineTest {
             sut.addSection(99L, 1L, 10L);
 
             // then
-            assertThat(sut.getSections().getAllStationIds().get(0)).isEqualTo(99L);
-            assertThat(sut.getSections().getAllStationIds().get(1)).isEqualTo(1L);
+            assertThat(sut.getSections().getAllStationIds()).isEqualTo(List.of(99L, 1L, 2L, 3L, 4L));
         }
 
         @Test
@@ -117,8 +118,19 @@ public class LineTest {
             sut.addSection(4L, 5L, 10L);
 
             // then
-            assertThat(sut.getSections().getLastSection().getUpStationId()).isEqualTo(4L);
-            assertThat(sut.getSections().getLastSection().getDownStationId()).isEqualTo(5L);
+            assertThat(sut.getSections().getAllStationIds()).isEqualTo(List.of(1L, 2L, 3L, 4L, 5L));
+        }
+
+        @Test
+        public void sut_add_section_if_middle_section() {
+            // given
+            Line sut = LineFixture.prepareLineOne(1L, 4L);
+
+            // when
+            sut.addSection(3L, 88L, 10L);
+
+            // then
+            assertThat(sut.getSections().getAllStationIds()).isEqualTo(List.of(1L, 2L, 3L, 88L, 4L));
         }
     }
 }

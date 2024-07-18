@@ -286,6 +286,37 @@ public class LineCommanderTest extends BaseTestSetup {
                 return null;
             });
         }
+
+        @Test
+        public void sut_add_section_middle() {
+            // given
+            List<Station> stations = stationDbUtil.insertStations("삼성역", "잠실역", "선릉역", "강남역");
+            Line line = lineDbUtil.insertLine(stations.get(0).getId(), stations.get(2).getId());
+            LineCommand.AddSection command = new LineCommand.AddSection(
+                    line.getId(),
+                    stations.get(0).getId(),
+                    stations.get(1).getId(),
+                    20L
+            );
+
+            // when
+            sut.addSection(command);
+
+            // then
+            transactionTemplate.execute(status -> {
+                Line actual = lineRepository.findByIdOrThrow(line.getId());
+                assertAll("assert section added",
+                        () -> assertThat(actual.getSections().size()).isEqualTo(2),
+                        () -> assertThat(actual.getSections().getFirstSection().getUpStationId()).isEqualTo(stations.get(0).getId()),
+                        () -> assertThat(actual.getSections().getFirstSection().getDownStationId()).isEqualTo(stations.get(1).getId()),
+                        () -> assertThat(actual.getSections().getFirstSection().getDistance()).isEqualTo(command.getDistance()),
+
+                        () -> assertThat(actual.getSections().getLastSection().getUpStationId()).isEqualTo(stations.get(1).getId()),
+                        () -> assertThat(actual.getSections().getLastSection().getDownStationId()).isEqualTo(stations.get(2).getId())
+                );
+                return null;
+            });
+        }
     }
 
     @Nested
