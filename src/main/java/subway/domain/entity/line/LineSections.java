@@ -24,7 +24,14 @@ public class LineSections implements Iterable<LineSection> {
             return;
         }
 
-        // 새로운 구간의 상행역이 노선의 하행종창역이 아니도록 구간인 경우 에러
+        // 구간의 상행역이 노선에 존재하지 않고 하행역이 상행종착역이라면 구간 가장 앞에 추가
+        if (!getAllStationIds().contains(section.getUpStationId())
+                && getFirstSection().getUpStationId().equals(section.getDownStationId())) {
+            this.data.add(0, section);
+            return;
+        }
+
+        // 구간의 상행역이 노선의 하행종창역이 아니도록 구간인 경우 에러
         if (!getLastSection().getDownStationId().equals(section.getUpStationId())) {
             throw new InvalidUpStationException(section.getUpStationId());
         }
@@ -61,6 +68,10 @@ public class LineSections implements Iterable<LineSection> {
 
     public int size() {
         return data.size();
+    }
+
+    public LineSection getFirstSection() {
+        return data.isEmpty() ? null : data.get(0);
     }
 
     public LineSection getLastSection() {

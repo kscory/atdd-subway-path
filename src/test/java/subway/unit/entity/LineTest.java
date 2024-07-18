@@ -96,6 +96,19 @@ public class LineTest {
         }
 
         @Test
+        public void sut_add_section_if_firstSection() {
+            // given
+            Line sut = LineFixture.prepareLineOne(1L, 4L);
+
+            // when
+            sut.addSection(99L, 1L, 10L);
+
+            // then
+            assertThat(sut.getSections().getAllStationIds().get(0)).isEqualTo(99L);
+            assertThat(sut.getSections().getAllStationIds().get(1)).isEqualTo(1L);
+        }
+
+        @Test
         public void sut_add_section_if_lastSection() {
             // given
             Line sut = LineFixture.prepareLineOne(1L, 4L);
