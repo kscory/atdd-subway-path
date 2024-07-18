@@ -24,14 +24,16 @@ public class LineSection {
     @Column(nullable = false)
     private Long distance;
 
+    @Column(nullable = false)
+    private Long position;
+
     protected LineSection() {}
 
-    public LineSection(Line line, Long upStationId, Long downStationId, Long distance) {
+    public LineSection(Line line, Long upStationId, Long downStationId, Long distance, Long position) {
         this.line = line;
         this.upStationId = upStationId;
         this.downStationId = downStationId;
         this.distance = distance;
+        this.position = position;
     }
-
-
 }

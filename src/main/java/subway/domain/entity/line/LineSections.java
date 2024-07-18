@@ -3,9 +3,7 @@ package subway.domain.entity.line;
 import lombok.NonNull;
 import subway.domain.exception.*;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Embeddable;
-import javax.persistence.OneToMany;
+import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -16,30 +14,31 @@ import java.util.stream.Stream;
 public class LineSections implements Iterable<LineSection> {
 
     @OneToMany(mappedBy = "line", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("position")
     private List<LineSection> data = new ArrayList<>();
 
-    protected void addSection(LineSection section) {
+    protected void addSection(Line line, Long upStationId, Long downStationId, Long distance) {
         if (data.isEmpty()) {
-            this.data.add(section);
+            data.add(new LineSection(line, upStationId, downStationId, distance, 0L));
             return;
         }
 
         // 구간의 상행역이 노선에 존재하지 않고 하행역이 상행종착역이라면 구간 가장 앞에 추가
-        if (!getAllStationIds().contains(section.getUpStationId())
-                && getFirstSection().getUpStationId().equals(section.getDownStationId())) {
-            this.data.add(0, section);
+        if (!getAllStationIds().contains(upStationId) && getFirstSection().getUpStationId().equals(downStationId)) {
+            data.add(0, new LineSection(line, upStationId, downStationId, distance, data.get(0).getPosition() - 1));
             return;
         }
 
         // 구간의 상행역이 노선의 하행종창역이 아니도록 구간인 경우 에러
-        if (!getLastSection().getDownStationId().equals(section.getUpStationId())) {
-            throw new InvalidUpStationException(section.getUpStationId());
+        if (!getLastSection().getDownStationId().equals(upStationId)) {
+            throw new InvalidUpStationException(upStationId);
         }
 
         // 새로운 구간의 하행역이 이미 노선에 포함되어 있는 경우 에러
-        verifyDownStationAlreadyExisted(section.getDownStationId());
+        verifyDownStationAlreadyExisted(downStationId);
 
-        this.data.add(section);
+
+        data.add(new LineSection(line, upStationId, downStationId, distance, getLastSection().getPosition() + 1));
     }
 
     private void verifyDownStationAlreadyExisted(Long downStationId) {

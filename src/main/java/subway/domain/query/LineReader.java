@@ -4,16 +4,16 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import subway.domain.entity.line.Line;
-import subway.domain.entity.line.LineSection;
 import subway.domain.entity.station.Station;
 import subway.domain.repository.LineRepository;
 import subway.domain.repository.StationRepository;
 import subway.domain.view.LineView;
 import subway.domain.view.StationView;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -49,16 +49,11 @@ public class LineReader {
     }
 
     private LineView.Main joinAndTransform(Line line, Map<Long, Station> stationMap) {
-        List<StationView.Main> allStations = line.getSections().stream()
-                .flatMap(section -> extractStationInSection(section, stationMap))
+        List<StationView.Main> allStations = line.getSections().getAllStationIds().stream()
+                .map(stationMap::get)
+                .map(station -> new StationView.Main(station.getId(), station.getName()))
                 .collect(Collectors.toList());
 
         return new LineView.Main(line.getId(), line.getName(), line.getColor(), allStations);
-    }
-
-    private Stream<StationView.Main> extractStationInSection(LineSection section, Map<Long, Station> stationMap) {
-        return Stream.of(stationMap.get(section.getUpStationId()), stationMap.get(section.getDownStationId()))
-                .filter(Objects::nonNull)
-                .map(station -> new StationView.Main(station.getId(), station.getName()));
     }
 }

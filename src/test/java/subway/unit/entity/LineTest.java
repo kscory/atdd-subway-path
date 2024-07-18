@@ -96,7 +96,7 @@ public class LineTest {
         }
 
         @Test
-        public void sut_add_section_if_firstSection() {
+        public void sut_add_section_if_first_section() {
             // given
             Line sut = LineFixture.prepareLineOne(1L, 4L);
 
@@ -109,7 +109,7 @@ public class LineTest {
         }
 
         @Test
-        public void sut_add_section_if_lastSection() {
+        public void sut_add_section_if_last_section() {
             // given
             Line sut = LineFixture.prepareLineOne(1L, 4L);
 

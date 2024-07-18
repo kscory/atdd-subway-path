@@ -26,7 +26,7 @@ public class LineDbUtil {
 
     @Transactional
     public LineSection insertSection(Line line, Long upStationId, Long downStationId, Long distance) {
-        LineSection section = new LineSection(line, upStationId, downStationId, distance);
+        LineSection section = new LineSection(line, upStationId, downStationId, distance, 0L);
         entityManager.persist(section);
         return section;
     }

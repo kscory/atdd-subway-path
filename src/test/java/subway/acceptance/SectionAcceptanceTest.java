@@ -12,8 +12,7 @@ import static subway.acceptance.step.BaseStepAsserter.응답_상태값이_올바
 import static subway.acceptance.step.LineStep.*;
 import static subway.acceptance.step.LineStepExtractor.노선_추출기;
 import static subway.acceptance.step.StationStep.*;
-import static subway.acceptance.step.StationStepAsserter.역_목록에_지정된_역이_포함되는지_검증한다;
-import static subway.acceptance.step.StationStepAsserter.역_목록에_지정된_역이_포함되지_않는지_검증한다;
+import static subway.acceptance.step.StationStepAsserter.*;
 import static subway.acceptance.step.StationStepExtractor.역_추출기;
 
 @DisplayName("지하철 구간 관련 인수 테스트")
@@ -87,7 +86,7 @@ public class SectionAcceptanceTest extends BaseTestSetup {
 
         // then
         List<String> 모든_역_이름 = 노선_추출기.단일_노선에_포함된_역_이름을_추출한다(노선을_조회한다(일호선_id));
-        역_목록에_지정된_역이_포함되는지_검증한다(모든_역_이름, "구로역");
+        역_목록에_지정된_역들이_순서대로_포함되는지_검증한다(모든_역_이름, "시청역", "용산역", "구로역");
     }
 
     /**
@@ -114,16 +113,15 @@ public class SectionAcceptanceTest extends BaseTestSetup {
 
         // then
         List<String> 모든_역_이름 = 노선_추출기.단일_노선에_포함된_역_이름을_추출한다(노선을_조회한다(일호선_id));
-        역_목록에_지정된_역이_포함되는지_검증한다(모든_역_이름, "서울역");
+        역_목록에_지정된_역들이_순서대로_포함되는지_검증한다(모든_역_이름, "시청역", "서울역", "용산역");
     }
 
 
-    /** Todo: 구현해야 함
+    /**
      * Given: 특정 지하철 노선이 등록되어 있고
-     * When: 구간의 상행역이 노선에 존재하고 하행역이 노선에 존재하지 않도록 구간을 추가하면
+     * When: 노선의 중간이 되도록 구간을 추가하면
      * Then: 해당 지하철 구간이 추가된다.
      */
-
 
     /**
      * Given: 한개의 노선과 한개의 구간이 등록되어 있고
