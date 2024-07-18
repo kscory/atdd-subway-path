@@ -20,21 +20,23 @@ import static subway.acceptance.step.StationStepExtractor.역_추출기;
 public class SectionAcceptanceTest extends BaseTestSetup {
     /**
      * Given: 특정 지하철 노선이 등록되어 있고
-     * When: 구간의 상행역이 노선의 하행종창역이 아니도록 구간을 추가하면
+     * When: 구간의 상행역과 하행역이 노선에 존재하지 않도록 구간을 추가하면
      * Then: 상행역이 잘못되었다는 오류가 발생한다.
      */
     @Test
-    void 구간_추가시_상행역이_잘못된_경우의_오류_발생_테스트() {
+    void 존재하지_않는_구간_추가시_오류_발생_테스트() {
         // given
         Long 시청역_id = 역_추출기.단일_id_를_추출한다(시청역을_생성한다());
         Long 용산역_id = 역_추출기.단일_id_를_추출한다(용산역을_생성한다());
-        Long 구로역_id = 역_추출기.단일_id_를_추출한다(구로역을_생성한다());
         Long 일호선_id = 노선_추출기.단일_id_를_추출한다(
                 노선을_생성한다(일호선_생성_요청값을_생성한다(시청역_id, 용산역_id))
         );
 
+        Long 서울역_id = 역_추출기.단일_id_를_추출한다(서울역을_생성한다());
+        Long 구로역_id = 역_추출기.단일_id_를_추출한다(구로역을_생성한다());
+
         // when
-        var 구간_추가_응답값 = 구간을_추가한다(일호선_id, 시청역_id, 구로역_id, 10L);
+        var 구간_추가_응답값 = 구간을_추가한다(일호선_id, 서울역_id, 구로역_id, 10L);
 
         // then
         응답_상태값이_올바른지_검증한다(구간_추가_응답값, HttpStatus.BAD_REQUEST.value());
@@ -46,7 +48,7 @@ public class SectionAcceptanceTest extends BaseTestSetup {
      * Then: 하행역이 잘못되었다는 오류가 발생한다.
      */
     @Test
-    void 구간_추가시_하행역이_잘못된_경우_오류_발생_테스트() {
+    void 하행역이_잘못된_경우_구간_추가시_오류_발생_테스트() {
         // given
         Long 시청역_id = 역_추출기.단일_id_를_추출한다(시청역을_생성한다());
         Long 용산역_id = 역_추출기.단일_id_를_추출한다(용산역을_생성한다());
@@ -67,7 +69,7 @@ public class SectionAcceptanceTest extends BaseTestSetup {
      * Then: 해당 지하철 구간이 추가된다.
      */
     @Test
-    void 구간_추가_테스트() {
+    void 하행종착역_구간_추가_테스트() {
         // given
         Long 시청역_id = 역_추출기.단일_id_를_추출한다(시청역을_생성한다());
         Long 용산역_id = 역_추출기.단일_id_를_추출한다(용산역을_생성한다());
@@ -87,13 +89,27 @@ public class SectionAcceptanceTest extends BaseTestSetup {
         역_목록에_지정된_역이_포함되는지_검증한다(모든_역_이름, "구로역");
     }
 
+    /** Todo: 구현해야 함
+     * Given: 특정 지하철 노선이 등록되어 있고
+     * When: 구간의 상행역이 노선에 존재하지 않고 하행역이 노선의 상행종창역이 되도록 구간을 추가하면
+     * Then: 해당 지하철 구간이 추가된다.
+     */
+
+
+    /** Todo: 구현해야 함
+     * Given: 특정 지하철 노선이 등록되어 있고
+     * When: 구간의 상행역이 노선에 존재하고 하행역이 노선에 존재하지 않도록 구간을 추가하면
+     * Then: 해당 지하철 구간이 추가된다.
+     */
+
+
     /**
      * Given: 한개의 노선과 한개의 구간이 등록되어 있고
      * When: 노선의 마지막 역을 삭제하면
      * Then: 오류가 발생한다.
      */
     @Test
-    void 구간_삭제시_노선에_구간이_한개뿐인_경우의_오류_발생_테스트() {
+    void 노선에_구간이_한개뿐인_경우_구간_삭제시_오류_발생_테스트() {
         // given
         Long 시청역_id = 역_추출기.단일_id_를_추출한다(시청역을_생성한다());
         Long 용산역_id = 역_추출기.단일_id_를_추출한다(용산역을_생성한다());
@@ -114,7 +130,7 @@ public class SectionAcceptanceTest extends BaseTestSetup {
      * Then: 오류가 발생한다.
      */
     @Test
-    void 구간_삭제시_삭제할_역이_잘못된_경우의_오류_발생_테스트() {
+    void 삭제할_역이_잘못된_경우_구간_삭제시_오류_발생_테스트() {
         // given
         Long 시청역_id = 역_추출기.단일_id_를_추출한다(시청역을_생성한다());
         Long 용산역_id = 역_추출기.단일_id_를_추출한다(용산역을_생성한다());
