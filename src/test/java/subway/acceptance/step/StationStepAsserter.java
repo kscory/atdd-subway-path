@@ -18,6 +18,6 @@ public class StationStepAsserter {
     }
 
     public static void 역_목록의_크기를_검증한다(List<String> stationNames, int size) {
-        assertThat(stationNames.size()).isEqualTo(2);
+        assertThat(stationNames.size()).isEqualTo(size);
     }
 }

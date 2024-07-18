@@ -2,12 +2,10 @@ package subway.domain.entity.line;
 
 import lombok.Builder;
 import lombok.Getter;
-import lombok.ToString;
 import subway.domain.command.LineCommand;
 
 import javax.persistence.*;
 
-@ToString
 @Getter
 @Entity(name = "lines")
 public class Line {

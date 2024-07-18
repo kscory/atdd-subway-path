@@ -19,8 +19,13 @@ public class LineSections implements Iterable<LineSection> {
     private List<LineSection> data = new ArrayList<>();
 
     protected void addSection(LineSection section) {
+        if (data.isEmpty()) {
+            this.data.add(section);
+            return;
+        }
+
         // 새로운 구간의 상행역이 노선의 하행종창역이 아니도록 구간인 경우 에러
-        if (!data.isEmpty() && !getLastSection().getDownStationId().equals(section.getUpStationId())) {
+        if (!getLastSection().getDownStationId().equals(section.getUpStationId())) {
             throw new InvalidUpStationException(section.getUpStationId());
         }
 
@@ -31,7 +36,7 @@ public class LineSections implements Iterable<LineSection> {
     }
 
     private void verifyDownStationAlreadyExisted(Long downStationId) {
-        if (getAllStationIds().stream().anyMatch(existedStationId -> existedStationId.equals(downStationId))) {
+        if (getAllStationIds().contains(downStationId)) {
             throw new InvalidDownStationException(downStationId);
         }
     }
@@ -69,10 +74,10 @@ public class LineSections implements Iterable<LineSection> {
     }
 
     public List<Long> getAllStationIds() {
-        // 모든 상행선 가져오기
+        // 모든 상행역 id 가져오기
         List<Long> stationIds = getAllUpStationIds();
 
-        // 마지막 하행선 추가
+        // 마지막 하행역 id 추가
         if (getLastSection() != null) {
             stationIds.add(getLastSection().getDownStationId());
         }

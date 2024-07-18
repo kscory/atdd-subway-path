@@ -1,11 +1,9 @@
 package subway.domain.entity.line;
 
 import lombok.Getter;
-import lombok.ToString;
 
 import javax.persistence.*;
 
-@ToString
 @Getter
 @Entity(name = "line_sections")
 public class LineSection {
@@ -34,4 +32,6 @@ public class LineSection {
         this.downStationId = downStationId;
         this.distance = distance;
     }
+
+
 }
