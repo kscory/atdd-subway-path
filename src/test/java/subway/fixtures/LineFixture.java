@@ -1,6 +1,5 @@
 package subway.fixtures;
 
-import subway.domain.command.LineCommand;
 import subway.domain.entity.line.Line;
 import subway.domain.entity.line.LineSections;
 
@@ -8,7 +7,9 @@ import java.util.UUID;
 
 public class LineFixture {
     public static Line prepareRandom(Long upStationId, Long downStationId) {
-        return Line.init(new LineCommand.CreateLine(UUID.randomUUID().toString(), UUID.randomUUID().toString(), upStationId, downStationId, 10L));
+        Line line = new Line(UUID.randomUUID().toString(), UUID.randomUUID().toString(), new LineSections());
+        line.addSection(upStationId, downStationId, 10L);
+        return line;
     }
 
     public static Line prepareLineOne(Long firstStationId, Long lastStationId) {

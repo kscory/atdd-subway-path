@@ -35,27 +35,38 @@ public class LineSections implements Iterable<LineSection> {
             throw new InvalidUpStationException(upStationId);
         }
 
+        // 새로운 구간의 하행역이 이미 노선에 포함되어 있는 경우 에러
+        if (getAllStationIds().contains(downStationId)) {
+            throw new InvalidDownStationException(downStationId);
+        }
+
         // 구간의 상행역이 노선의 하행종창역이라면 구간 가장 뒤에 추가
-        if (!getAllStationIds().contains(downStationId) && getLastSection().getDownStationId().equals(upStationId)) {
+        if (getLastSection().getDownStationId().equals(upStationId)) {
             data.add(new LineSection(line, upStationId, downStationId, distance, data.get(data.size()-1).getPosition() + 1));
             return;
         }
-
-        // 새로운 구간의 하행역이 이미 노선에 포함되어 있는 경우 에러
-        verifyDownStationAlreadyExisted(downStationId);
 
         // 조건을 모두 통과했다면 중간에 추가
         Optional<Integer> sameIdx = findSameUpStationIdx(upStationId);
         if (sameIdx.isPresent()) {
             int idx = sameIdx.get();
 
+
+            LineSection insertedSection = data.get(idx);
+
+            // distance 검증
+            if (insertedSection.getDistance() < distance) {
+                throw new SubwayDomainException(SubwayDomainExceptionType.INVALID_SECTION_DISTANCE);
+            }
+
             // 같은 position 으로 추가
-            LineSection changed = data.get(idx);
             data.add(idx, new LineSection(line, upStationId, downStationId, distance, data.get(idx).getPosition()));
-            data.add(idx+1, new LineSection(line, downStationId, changed.getDownStationId(), distance, data.get(idx).getPosition()));
+            data.add(idx+1, new LineSection(line, downStationId, insertedSection.getDownStationId(), distance, data.get(idx).getPosition()));
+
+            // 기존 값 제거
             data.remove(idx+2);
 
-            // position 들 1씩 추가
+            // idx 이후의 position 들 1씩 추가
             for (int i=idx+1; i<data.size(); i++) {
                 data.get(i).increasePosition();
             }
@@ -70,12 +81,6 @@ public class LineSections implements Iterable<LineSection> {
             }
         }
         return Optional.empty();
-    }
-
-    private void verifyDownStationAlreadyExisted(Long downStationId) {
-        if (getAllStationIds().contains(downStationId)) {
-            throw new InvalidDownStationException(downStationId);
-        }
     }
 
     protected void deleteSection(Long stationId) {

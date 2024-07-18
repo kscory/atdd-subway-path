@@ -86,6 +86,18 @@ public class LineTest {
         }
 
         @Test
+        public void sut_throws_if_distance_greater_than_inserted_section() {
+            // given
+            Line sut = LineFixture.prepareLineOne(1L, 4L);
+
+            // when
+            SubwayDomainException actual = (SubwayDomainException) catchThrowable(() -> sut.addSection(2L, 9L, 11L));
+
+            // then
+            assertThat(actual.getExceptionType()).isEqualTo(SubwayDomainExceptionType.INVALID_SECTION_DISTANCE);
+        }
+
+        @Test
         public void sut_add_section_if_empty() {
             // given
             Line sut = new Line("11", "cc", new LineSections());

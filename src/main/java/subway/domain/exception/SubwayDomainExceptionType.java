@@ -12,6 +12,7 @@ public enum SubwayDomainExceptionType {
     INVALID_DOWN_STATION(HttpStatus.BAD_REQUEST.value(), "INVALID_DOWN_STATION", "invalid down-station"),
     INVALID_STATION(HttpStatus.BAD_REQUEST.value(), "INVALID_STATION", "invalid station"),
     INVALID_SECTION_SIZE(HttpStatus.BAD_REQUEST.value(), "INVALID_SECTION_SIZE", "invalid section size"),
+    INVALID_SECTION_DISTANCE(HttpStatus.BAD_REQUEST.value(), "INVALID_SECTION_DISTANCE", "invalid section distance"),
     ;
 
     private final int status;

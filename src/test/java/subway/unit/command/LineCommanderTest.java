@@ -296,7 +296,7 @@ public class LineCommanderTest extends BaseTestSetup {
                     line.getId(),
                     stations.get(0).getId(),
                     stations.get(1).getId(),
-                    20L
+                    8L
             );
 
             // when
