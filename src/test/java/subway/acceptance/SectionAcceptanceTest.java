@@ -135,8 +135,8 @@ public class SectionAcceptanceTest extends BaseTestSetup {
         Long 용산역_id = 역_추출기.단일_id_를_추출한다(용산역을_생성한다());
 
         // when
-        구간을_추가한다(일호선_id, 시청역_id, 서울역_id, 10L);
-        var 구간_추가_응답값 = 구간을_추가한다(일호선_id, 서울역_id, 용산역_id, 10L);
+        구간을_추가한다(일호선_id, 시청역_id, 서울역_id, 3L);
+        var 구간_추가_응답값 = 구간을_추가한다(일호선_id, 서울역_id, 용산역_id, 5L);
 
         // then
         응답_상태값이_올바른지_검증한다(구간_추가_응답값, HttpStatus.CREATED.value());

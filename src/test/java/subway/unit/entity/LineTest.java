@@ -62,27 +62,39 @@ public class LineTest {
     @Nested
     class AddSection {
         @Test
-        public void sut_throws_if_invalid_up_station_section() {
+        public void sut_throws_if_upStation_not_existed_but_not_first_section() {
             // given
             Line sut = LineFixture.prepareLineOne(1L, 4L);
 
             // when
-            SubwayDomainException actual = (SubwayDomainException) catchThrowable(() -> sut.addSection(5L, 6L, 10L));
+            SubwayDomainException actual = (SubwayDomainException) catchThrowable(() -> sut.addSection(5L, 7L, 5L));
 
             // then
-            assertThat(actual.getExceptionType()).isEqualTo(SubwayDomainExceptionType.INVALID_UP_STATION);
+            assertThat(actual.getExceptionType()).isEqualTo(SubwayDomainExceptionType.INVALID_STATION);
         }
 
         @Test
-        public void sut_throws_if_downStation_already_existed() {
+        public void sut_throws_if_downStation_existed_but_not_first_section() {
             // given
             Line sut = LineFixture.prepareLineOne(1L, 4L);
 
             // when
-            SubwayDomainException actual = (SubwayDomainException) catchThrowable(() -> sut.addSection(4L, 3L, 10L));
+            SubwayDomainException actual = (SubwayDomainException) catchThrowable(() -> sut.addSection(4L, 3L, 5L));
 
             // then
-            assertThat(actual.getExceptionType()).isEqualTo(SubwayDomainExceptionType.INVALID_DOWN_STATION);
+            assertThat(actual.getExceptionType()).isEqualTo(SubwayDomainExceptionType.INVALID_STATION);
+        }
+
+        @Test
+        public void sut_throws_if_upStation_existed_but_first_section() {
+            // given
+            Line sut = LineFixture.prepareLineOne(1L, 4L);
+
+            // when
+            SubwayDomainException actual = (SubwayDomainException) catchThrowable(() -> sut.addSection(3L, 1L, 5L));
+
+            // then
+            assertThat(actual.getExceptionType()).isEqualTo(SubwayDomainExceptionType.INVALID_STATION);
         }
 
         @Test
@@ -119,6 +131,7 @@ public class LineTest {
 
             // then
             assertThat(sut.getSections().getAllStationIds()).isEqualTo(List.of(99L, 1L, 2L, 3L, 4L));
+            assertThat(sut.getSections().getFirstSection().getDistance()).isEqualTo(10L);
         }
 
         @Test
@@ -131,6 +144,7 @@ public class LineTest {
 
             // then
             assertThat(sut.getSections().getAllStationIds()).isEqualTo(List.of(1L, 2L, 3L, 4L, 5L));
+            assertThat(sut.getSections().getLastSection().getDistance()).isEqualTo(10L);
         }
 
         @Test
@@ -139,10 +153,23 @@ public class LineTest {
             Line sut = LineFixture.prepareLineOne(1L, 4L);
 
             // when
-            sut.addSection(3L, 88L, 10L);
+            sut.addSection(3L, 88L, 5L);
 
             // then
             assertThat(sut.getSections().getAllStationIds()).isEqualTo(List.of(1L, 2L, 3L, 88L, 4L));
+        }
+
+        @Test
+        public void sut_split_distance_if_middle_section() {
+            // given
+            Line sut = LineFixture.prepareLineOne(1L, 4L);
+
+            // when
+            sut.addSection(1L, 88L, 4L);
+
+            // then
+            assertThat(sut.getSections().get(0).getDistance()).isEqualTo(4L);
+            assertThat(sut.getSections().get(1).getDistance()).isEqualTo(6L);
         }
     }
 }

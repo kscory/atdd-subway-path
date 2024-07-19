@@ -307,12 +307,14 @@ public class LineCommanderTest extends BaseTestSetup {
                 Line actual = lineRepository.findByIdOrThrow(line.getId());
                 assertAll("assert section added",
                         () -> assertThat(actual.getSections().size()).isEqualTo(2),
+
                         () -> assertThat(actual.getSections().getFirstSection().getUpStationId()).isEqualTo(stations.get(0).getId()),
                         () -> assertThat(actual.getSections().getFirstSection().getDownStationId()).isEqualTo(stations.get(1).getId()),
-                        () -> assertThat(actual.getSections().getFirstSection().getDistance()).isEqualTo(command.getDistance()),
+                        () -> assertThat(actual.getSections().getFirstSection().getDistance()).isEqualTo(8L),
 
                         () -> assertThat(actual.getSections().getLastSection().getUpStationId()).isEqualTo(stations.get(1).getId()),
-                        () -> assertThat(actual.getSections().getLastSection().getDownStationId()).isEqualTo(stations.get(2).getId())
+                        () -> assertThat(actual.getSections().getLastSection().getDownStationId()).isEqualTo(stations.get(2).getId()),
+                        () -> assertThat(actual.getSections().getLastSection().getDistance()).isEqualTo(2L)
                 );
                 return null;
             });

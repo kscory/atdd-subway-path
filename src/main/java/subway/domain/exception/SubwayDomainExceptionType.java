@@ -8,8 +8,6 @@ public enum SubwayDomainExceptionType {
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR.value(), "INTERNAL_SERVER_ERROR", "internal server error"),
     NOT_FOUND_STATION(HttpStatus.NOT_FOUND.value(), "NOT_FOUND_STATION", "not found station"),
     NOT_FOUND_LINE(HttpStatus.NOT_FOUND.value(), "NOT_FOUND_LINE", "not found line"),
-    INVALID_UP_STATION(HttpStatus.BAD_REQUEST.value(), "INVALID_UP_STATION", "invalid up-station"),
-    INVALID_DOWN_STATION(HttpStatus.BAD_REQUEST.value(), "INVALID_DOWN_STATION", "invalid down-station"),
     INVALID_STATION(HttpStatus.BAD_REQUEST.value(), "INVALID_STATION", "invalid station"),
     INVALID_SECTION_SIZE(HttpStatus.BAD_REQUEST.value(), "INVALID_SECTION_SIZE", "invalid section size"),
     INVALID_SECTION_DISTANCE(HttpStatus.BAD_REQUEST.value(), "INVALID_SECTION_DISTANCE", "invalid section distance"),
