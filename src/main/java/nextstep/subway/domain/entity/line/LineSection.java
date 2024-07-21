@@ -56,11 +56,11 @@ public class LineSection {
         return Pair.of(first, second);
     }
 
-    public boolean isPrevSection(LineSection section) {
+    public boolean isPrevSectionThan(LineSection section) {
         return downStationId.equals(section.getUpStationId());
     }
 
-    public boolean isNextSection(LineSection section) {
+    public boolean isNextSectionThan(LineSection section) {
         return upStationId.equals(section.getDownStationId());
     }
 }

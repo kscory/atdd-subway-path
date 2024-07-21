@@ -39,45 +39,43 @@ public class LineSections implements Iterable<LineSection> {
         }
 
         // 상행역이 노선에 없는데 가장 앞에 추가되지 않는 경우
-        if (!containsStation(section.getUpStationId()) && !section.isPrevSection(getFirstSection())) {
+        if (!containsStation(section.getUpStationId()) && !section.isPrevSectionThan(getFirstSection())) {
             throw new InvalidStationException("상행역이 노선에 존재하지 않는다면 가장 앞 구간으로 추가해야 합니다.");
         }
 
         // 하행역이 노선에 있는데 가장 앞에 추가되지 않는 경우
-        if (containsStation(section.getDownStationId()) && !section.isPrevSection(getFirstSection())) {
+        if (containsStation(section.getDownStationId()) && !section.isPrevSectionThan(getFirstSection())) {
             throw new InvalidStationException("하행역이 노선에 존재하다면 가장 앞 구간으로 추가해야 합니다.");
         }
 
         // 상행역이 존재하는데 가장 앞에 추가되는 경우
-        if (containsStation(section.getUpStationId()) && section.isPrevSection(getFirstSection())) {
+        if (containsStation(section.getUpStationId()) && section.isPrevSectionThan(getFirstSection())) {
             throw new InvalidStationException("상행역이 노선에 존재한다면 가장 앞 구간으로 추가할 수 없습니다.");
         }
 
 
         // 추가되는 구간이 가장 앞인 경우
-        if (section.isPrevSection(getFirstSection())) {
-            addFirstSectionAndArrange(section);
-            return;
+        if (section.isPrevSectionThan(getFirstSection())) {
+            addToFirst(section);
         }
-
         // 추가되는 구간이 가장 뒤인 경우
-        if (section.isNextSection(getLastSection())) {
-            addLastSectionAndArrange(section);
-            return;
+        else if (section.isNextSectionThan(getLastSection())) {
+            addToLast(section);
+        }
+        // 추가되는 구간이 중간인 경우
+        else {
+            findSameUpStationIdx(section.getUpStationId()).ifPresent(idx -> addToMiddle(section, idx));
         }
 
-        // 추가되는 구간이 중간인 경우
-        findSameUpStationIdx(section.getUpStationId()).ifPresent(idx -> addMiddleSectionAndArrange(section, idx));
+        arrangePosition();
     }
 
-    private void addFirstSectionAndArrange(LineSection section) {
+    private void addToFirst(LineSection section) {
         data.add(0, section);
-        arrangePosition();
     }
 
-    private void addLastSectionAndArrange(LineSection section) {
+    private void addToLast(LineSection section) {
         data.add(section);
-        arrangePosition();
     }
 
     private Optional<Integer> findSameUpStationIdx(Long upStationId) {
@@ -89,12 +87,11 @@ public class LineSections implements Iterable<LineSection> {
         return Optional.empty();
     }
 
-    private void addMiddleSectionAndArrange(LineSection section, int idx) {
+    private void addToMiddle(LineSection section, int idx) {
         Pair<LineSection, LineSection> split = data.get(idx).splitSection(section.getDownStationId(), section.getDistance());
         data.add(idx, split.getFirst());
         data.add(idx+1, split.getSecond());
         data.remove(idx+2);
-        arrangePosition();
     }
 
     private void arrangePosition() {
