@@ -3,9 +3,9 @@ package nextstep.subway.domain.entity.line;
 import lombok.Getter;
 import nextstep.subway.domain.exception.SubwayDomainException;
 import nextstep.subway.domain.exception.SubwayDomainExceptionType;
-import org.springframework.data.util.Pair;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Getter
 @Entity(name = "line_sections")
@@ -44,7 +44,7 @@ public class LineSection {
         this.position = position;
     }
 
-    public Pair<LineSection, LineSection> splitSection(Long middleStationId, Long firstDistance) {
+    public List<LineSection> split(Long middleStationId, Long firstDistance) {
         long secondDistance = distance - firstDistance;
         if (secondDistance < 0) {
             throw new SubwayDomainException(SubwayDomainExceptionType.INVALID_SECTION_DISTANCE);
@@ -53,7 +53,7 @@ public class LineSection {
         LineSection first = new LineSection(line, upStationId, middleStationId, firstDistance);
         LineSection second = new LineSection(line, middleStationId, downStationId, secondDistance);
 
-        return Pair.of(first, second);
+        return List.of(first, second);
     }
 
     public boolean isPrevSectionThan(LineSection section) {
@@ -62,5 +62,9 @@ public class LineSection {
 
     public boolean isNextSectionThan(LineSection section) {
         return upStationId.equals(section.getDownStationId());
+    }
+
+    public boolean isSameUpStation(LineSection section) {
+        return upStationId.equals(section.upStationId);
     }
 }

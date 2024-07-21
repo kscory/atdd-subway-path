@@ -1,10 +1,7 @@
 package nextstep.subway.domain.entity.line;
 
 import lombok.NonNull;
-import nextstep.subway.domain.exception.InvalidStationException;
-import nextstep.subway.domain.exception.SubwayDomainException;
-import nextstep.subway.domain.exception.SubwayDomainExceptionType;
-import org.springframework.data.util.Pair;
+import nextstep.subway.domain.exception.*;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Embeddable;
@@ -13,7 +10,6 @@ import javax.persistence.OrderBy;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -54,17 +50,12 @@ public class LineSections implements Iterable<LineSection> {
         }
 
 
-        // 추가되는 구간이 가장 앞인 경우
         if (section.isPrevSectionThan(getFirstSection())) {
             addToFirst(section);
-        }
-        // 추가되는 구간이 가장 뒤인 경우
-        else if (section.isNextSectionThan(getLastSection())) {
+        } else if (section.isNextSectionThan(getLastSection())) {
             addToLast(section);
-        }
-        // 추가되는 구간이 중간인 경우
-        else {
-            findSameUpStationIdx(section.getUpStationId()).ifPresent(idx -> addToMiddle(section, idx));
+        } else {
+            addToMiddle(section);
         }
 
         arrangePosition();
@@ -78,20 +69,18 @@ public class LineSections implements Iterable<LineSection> {
         data.add(section);
     }
 
-    private Optional<Integer> findSameUpStationIdx(Long upStationId) {
-        for (int i=0; i<data.size(); i++) {
-            if (data.get(i).getUpStationId().equals(upStationId)) {
-                return Optional.of(i);
-            }
-        }
-        return Optional.empty();
+    private LineSection findSameUpStationSectionOrThrow(LineSection section) {
+        return data.stream()
+                .filter(dataSection -> dataSection.isSameUpStation(section))
+                .findFirst()
+                .orElseThrow(() -> new NotFoundSectionException("상행역이 동일한 section 을 찾을 수 없습니다."));
     }
 
-    private void addToMiddle(LineSection section, int idx) {
-        Pair<LineSection, LineSection> split = data.get(idx).splitSection(section.getDownStationId(), section.getDistance());
-        data.add(idx, split.getFirst());
-        data.add(idx+1, split.getSecond());
-        data.remove(idx+2);
+    private void addToMiddle(LineSection section) {
+        LineSection originSection = findSameUpStationSectionOrThrow(section);
+        List<LineSection> splits = originSection.split(section.getDownStationId(), section.getDistance());
+        data.addAll(Math.toIntExact(originSection.getPosition()), splits);
+        data.remove(originSection);
     }
 
     private void arrangePosition() {
