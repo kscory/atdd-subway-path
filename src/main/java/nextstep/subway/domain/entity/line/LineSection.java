@@ -64,7 +64,11 @@ public class LineSection {
         return upStationId.equals(section.getDownStationId());
     }
 
-    public boolean isSameUpStation(LineSection section) {
-        return upStationId.equals(section.upStationId);
+    public boolean isSameUpStation(Long upStationId) {
+        return this.upStationId.equals(upStationId);
+    }
+
+    public boolean isSameDownStation(Long downStationId) {
+        return this.downStationId.equals(downStationId);
     }
 }

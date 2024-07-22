@@ -223,5 +223,29 @@ public class LineTest {
             // then
             assertThat(sut.getSections().getAllStationIds()).isEqualTo(List.of(1L, 2L, 3L));
         }
+
+        @Test
+        public void sut_delete_section_if_middle_section() {
+            // given
+            Line sut = LineFixture.prepareLineOne(1L, 4L);
+
+            // when
+            sut.deleteSection(2L);
+
+            // then
+            assertThat(sut.getSections().getAllStationIds()).isEqualTo(List.of(1L, 3L, 4L));
+        }
+
+        @Test
+        public void sut_join_distance_if_middle_section() {
+            // given
+            Line sut = LineFixture.prepareLineOne(1L, 4L);
+
+            // when
+            sut.deleteSection(2L);
+
+            // then
+            assertThat(sut.getSections().get(0).getDistance()).isEqualTo(20L);
+        }
     }
 }
