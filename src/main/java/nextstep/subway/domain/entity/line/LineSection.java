@@ -56,6 +56,15 @@ public class LineSection {
         return List.of(first, second);
     }
 
+    public LineSection join(LineSection back) {
+        return new LineSection(
+                line,
+                upStationId,
+                back.getDownStationId(),
+                getDistance() + back.getDistance()
+        );
+    }
+
     public boolean isPrevSectionThan(LineSection section) {
         return downStationId.equals(section.getUpStationId());
     }

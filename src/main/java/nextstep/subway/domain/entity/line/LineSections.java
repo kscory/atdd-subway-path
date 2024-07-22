@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Embeddable
 public class LineSections implements Iterable<LineSection> {
@@ -26,6 +25,12 @@ public class LineSections implements Iterable<LineSection> {
 
     private boolean containsStation(Long stationId) {
         return getAllStationIds().contains(stationId);
+    }
+
+    private void arrangePosition() {
+        for (int i=0; i<data.size(); i++) {
+            data.get(i).changePosition((long) i);
+        }
     }
 
     protected void addSection(LineSection section) {
@@ -69,31 +74,11 @@ public class LineSections implements Iterable<LineSection> {
         data.add(section);
     }
 
-    private LineSection findSameUpStationSectionOrThrow(Long upStationId) {
-        return data.stream()
-                .filter(dataSection -> dataSection.isSameUpStation(upStationId))
-                .findFirst()
-                .orElseThrow(() -> new NotFoundSectionException("상행역이 동일한 section 을 찾을 수 없습니다."));
-    }
-
-    private LineSection findSameDownStationSectionOrThrow(Long downStationId) {
-        return data.stream()
-                .filter(dataSection -> dataSection.isSameDownStation(downStationId))
-                .findFirst()
-                .orElseThrow(() -> new NotFoundSectionException("하행역이 동일한 section 을 찾을 수 없습니다."));
-    }
-
     private void addToMiddle(LineSection section) {
-        LineSection originSection = findSameUpStationSectionOrThrow(section.getUpStationId());
+        LineSection originSection = getSectionByUpStationIdOrThrow(section.getUpStationId());
         List<LineSection> splits = originSection.split(section.getDownStationId(), section.getDistance());
-        data.addAll(Math.toIntExact(originSection.getPosition()), splits);
+        data.addAll(data.indexOf(originSection), splits);
         data.remove(originSection);
-    }
-
-    private void arrangePosition() {
-        for (int i=0; i<data.size(); i++) {
-            data.get(i).changePosition((long) i);
-        }
     }
 
     protected void deleteSection(Long stationId) {
@@ -105,31 +90,40 @@ public class LineSections implements Iterable<LineSection> {
             throw new InvalidStationException("노선에 존재하지 않는 역입니다.");
         }
 
-        if (getFirstSection().getUpStationId().equals(stationId)) {
-            data.remove(0);
-        } else if (getLastSection().getDownStationId().equals(stationId)){
-            data.remove(size() -1);
+        if (isFirstStation(stationId)) {
+            deleteFirst();
+        } else if (isLastStation(stationId)){
+            deleteLast();
         } else {
-            LineSection frontSection = findSameDownStationSectionOrThrow(stationId);
-            LineSection backSection = findSameUpStationSectionOrThrow(stationId);
-
-            LineSection joinedSection = new LineSection(
-                    frontSection.getLine(),
-                    frontSection.getUpStationId(),
-                    backSection.getDownStationId(),
-                    frontSection.getDistance() + backSection.getDistance()
-            );
-
-            data.add(data.indexOf(frontSection), joinedSection);
-            data.remove(frontSection);
-            data.remove(backSection);
+            deleteMiddle(stationId);
         }
 
         arrangePosition();
     }
 
-    public Stream<LineSection> stream() {
-        return data.stream();
+    private boolean isFirstStation(Long stationId) {
+        return getFirstSection().isSameUpStation(stationId);
+    }
+
+    private boolean isLastStation(Long stationId) {
+        return getLastSection().isSameDownStation(stationId);
+    }
+
+    private void deleteFirst() {
+        data.remove(0);
+    }
+
+    private void deleteLast() {
+        data.remove(size() -1);
+    }
+
+    private void deleteMiddle(Long stationId) {
+        LineSection frontSection = getSectionByDownStationIdOrThrow(stationId);
+        LineSection backSection = getSectionByUpStationIdOrThrow(stationId);
+
+        data.add(data.indexOf(frontSection), frontSection.join(backSection));
+        data.remove(frontSection);
+        data.remove(backSection);
     }
 
     public int size() {
@@ -142,6 +136,20 @@ public class LineSections implements Iterable<LineSection> {
 
     public LineSection getLastSection() {
         return data.isEmpty() ? null : data.get(size() - 1);
+    }
+
+    private LineSection getSectionByUpStationIdOrThrow(Long upStationId) {
+        return data.stream()
+                .filter(section -> section.isSameUpStation(upStationId))
+                .findFirst()
+                .orElseThrow(() -> new NotFoundSectionException("상행역이 동일한 section 을 찾을 수 없습니다."));
+    }
+
+    private LineSection getSectionByDownStationIdOrThrow(Long downStationId) {
+        return data.stream()
+                .filter(section -> section.isSameDownStation(downStationId))
+                .findFirst()
+                .orElseThrow(() -> new NotFoundSectionException("하행역이 동일한 section 을 찾을 수 없습니다."));
     }
 
     private List<Long> getAllUpStationIds() {
