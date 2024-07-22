@@ -94,13 +94,19 @@ public class LineSections implements Iterable<LineSection> {
             throw new SubwayDomainException(SubwayDomainExceptionType.INVALID_SECTION_SIZE);
         }
 
-        // 삭제할 역이 노선의 하행종창역이 아닌 경우 에러
-        if (!getLastSection().getDownStationId().equals(stationId)) {
-            throw new InvalidStationException(stationId);
+        if (!containsStation(stationId)) {
+            throw new InvalidStationException("노선에 존재하지 않는 역입니다.");
         }
 
-        // 마지막 section 에서 제거
-        data.remove(size() -1);
+        // 삭제역이 상행 종착역인 경우
+        if (getFirstSection().getUpStationId().equals(stationId)) {
+            data.remove(0);
+        } else {
+            // 마지막 section 에서 제거
+            data.remove(size() -1);
+        }
+
+        arrangePosition();
     }
 
     public Stream<LineSection> stream() {
