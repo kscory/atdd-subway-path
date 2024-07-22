@@ -170,7 +170,7 @@ public class SectionAcceptanceTest extends BaseTestSetup {
 
     /**
      * Given: 한개의 노선과 두개의 구간이 등록되어 있고
-     * When: 하행 종점역이 아닌 역을 삭제하면
+     * When: 노선에 포함된 역이 아닌 역을 삭제하면
      * Then: 오류가 발생한다.
      */
     @Test
@@ -184,11 +184,33 @@ public class SectionAcceptanceTest extends BaseTestSetup {
         );
         구간을_추가한다(일호선_id, 용산역_id, 구로역_id, 10L);
 
+        Long 서울역_id = 역_추출기.단일_id_를_추출한다(서울역을_생성한다());
+
         // when
-        var 구간삭제_응답값 = 구간을_삭제한다(일호선_id, 시청역_id);
+        var 구간삭제_응답값 = 구간을_삭제한다(일호선_id, 서울역_id);
 
         // then
         응답_상태값이_올바른지_검증한다(구간삭제_응답값, HttpStatus.BAD_REQUEST.value());
+    }
+
+    /**
+     * Given: 한개의 노선과 두개의 구간이 등록되어 있고
+     * When: 노선의 처음 역을 삭제하면
+     * Then: 해당 역을 상행역으로 하는 구간이 삭제된다.
+     */
+    @Test
+    void 상행종착역_구간_삭제_테스트() {
+
+    }
+
+    /**
+     * Given: 한개의 노선과 두개의 구간이 등록되어 있고
+     * When: 노선의 처음 역을 삭제하면
+     * Then: 해당 역을 포함하는 구간이 삭제된다.
+     */
+    @Test
+    void 중간_구간_삭제_테스트() {
+
     }
 
 
@@ -198,14 +220,15 @@ public class SectionAcceptanceTest extends BaseTestSetup {
      * Then: 해당 역을 하행역으로 하는 구간이 삭제된다.
      */
     @Test
-    void 구간_삭제_테스트() {
+    void 하행종착역_구간_삭제_테스트() {
         // given
         Long 시청역_id = 역_추출기.단일_id_를_추출한다(시청역을_생성한다());
         Long 용산역_id = 역_추출기.단일_id_를_추출한다(용산역을_생성한다());
-        Long 구로역_id = 역_추출기.단일_id_를_추출한다(구로역을_생성한다());
         Long 일호선_id = 노선_추출기.단일_id_를_추출한다(
                 노선을_생성한다(일호선_생성_요청값을_생성한다(시청역_id, 용산역_id))
         );
+
+        Long 구로역_id = 역_추출기.단일_id_를_추출한다(구로역을_생성한다());
         구간을_추가한다(일호선_id, 용산역_id, 구로역_id, 10L);
 
         // when
