@@ -337,37 +337,6 @@ public class LineCommanderTest extends BaseTestSetup {
         }
 
         @Test
-        public void sut_throws_if_section_size_one() {
-            // given
-            List<Station> stations = stationDbUtil.insertStations("삼성역", "잠실역", "선릉역", "강남역");
-            Line line = lineDbUtil.insertLine(stations.get(0).getId(), stations.get(1).getId());
-
-            LineCommand.DeleteSection command = new LineCommand.DeleteSection(line.getId(), stations.get(1).getId());
-
-            // when
-            SubwayDomainException actual = (SubwayDomainException) catchThrowable(() -> sut.deleteSection(command));
-
-            // then
-            assertThat(actual.getExceptionType()).isEqualTo(SubwayDomainExceptionType.INVALID_SECTION_SIZE);
-        }
-
-        @Test
-        public void sut_throws_if_not_contains_station() {
-            // given
-            List<Station> stations = stationDbUtil.insertStations("삼성역", "잠실역", "선릉역", "강남역");
-            Line line = lineDbUtil.insertLine(stations.get(0).getId(), stations.get(1).getId());
-            lineDbUtil.insertSection(line, stations.get(1).getId(), stations.get(2).getId(), 20L);
-
-            LineCommand.DeleteSection command = new LineCommand.DeleteSection(line.getId(), 123L);
-
-            // when
-            SubwayDomainException actual = (SubwayDomainException) catchThrowable(() -> sut.deleteSection(command));
-
-            // then
-            assertThat(actual.getExceptionType()).isEqualTo(SubwayDomainExceptionType.INVALID_STATION);
-        }
-
-        @Test
         public void sut_delete_section_first() {
             // given
             List<Station> stations = stationDbUtil.insertStations("삼성역", "잠실역", "선릉역", "강남역");

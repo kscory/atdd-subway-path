@@ -172,4 +172,56 @@ public class LineTest {
             assertThat(sut.getSections().get(1).getDistance()).isEqualTo(6L);
         }
     }
+
+    @DisplayName("deleteSection")
+    @Nested
+    class DeleteSection {
+        @Test
+        public void sut_throws_if_section_size_one() {
+            // given
+            Line sut = LineFixture.prepareLineOne(1L, 2L);
+
+            // when
+            SubwayDomainException actual = (SubwayDomainException) catchThrowable(() -> sut.deleteSection(1L));
+
+            // then
+            assertThat(actual.getExceptionType()).isEqualTo(SubwayDomainExceptionType.INVALID_SECTION_SIZE);
+        }
+
+        @Test
+        public void sut_throws_if_not_includes_station() {
+            // given
+            Line sut = LineFixture.prepareLineOne(1L, 4L);
+
+            // when
+            SubwayDomainException actual = (SubwayDomainException) catchThrowable(() -> sut.deleteSection(999L));
+
+            // then
+            assertThat(actual.getExceptionType()).isEqualTo(SubwayDomainExceptionType.INVALID_STATION);
+        }
+
+        @Test
+        public void sut_delete_section_if_first_section() {
+            // given
+            Line sut = LineFixture.prepareLineOne(1L, 4L);
+
+            // when
+            sut.deleteSection(1L);
+
+            // then
+            assertThat(sut.getSections().getAllStationIds()).isEqualTo(List.of(2L, 3L, 4L));
+        }
+
+        @Test
+        public void sut_delete_section_if_last_section() {
+            // given
+            Line sut = LineFixture.prepareLineOne(1L, 4L);
+
+            // when
+            sut.deleteSection(4L);
+
+            // then
+            assertThat(sut.getSections().getAllStationIds()).isEqualTo(List.of(1L, 2L, 3L));
+        }
+    }
 }
