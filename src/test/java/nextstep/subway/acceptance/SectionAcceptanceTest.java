@@ -190,7 +190,7 @@ public class SectionAcceptanceTest extends BaseTestSetup {
         var 구간삭제_응답값 = 구간을_삭제한다(일호선_id, 서울역_id);
 
         // then
-        응답_상태값이_올바른지_검증한다(구간삭제_응답값, HttpStatus.BAD_REQUEST.value());
+        응답_상태값이_올바른지_검증한다(구간삭제_응답값, HttpStatus.NOT_FOUND.value());
     }
 
     /**
