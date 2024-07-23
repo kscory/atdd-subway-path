@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 
 @Embeddable
 public class LineSections implements Iterable<LineSection> {
-
     @OneToMany(mappedBy = "line", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("position")
     private List<LineSection> data = new ArrayList<>();
@@ -54,16 +53,22 @@ public class LineSections implements Iterable<LineSection> {
             throw new InvalidStationException("상행역이 노선에 존재한다면 가장 앞 구간으로 추가할 수 없습니다.");
         }
 
+        addToPosition(section);
+        arrangePosition();
+    }
 
+    private void addToPosition(LineSection section) {
         if (section.isPrevSectionThan(getFirstSection())) {
             addToFirst(section);
-        } else if (section.isNextSectionThan(getLastSection())) {
-            addToLast(section);
-        } else {
-            addToMiddle(section);
+            return;
         }
 
-        arrangePosition();
+        if (section.isNextSectionThan(getLastSection())) {
+            addToLast(section);
+            return;
+        }
+
+        addToMiddle(section);
     }
 
     private void addToFirst(LineSection section) {
@@ -90,23 +95,22 @@ public class LineSections implements Iterable<LineSection> {
             throw new InvalidStationException("노선에 존재하지 않는 역입니다.");
         }
 
-        if (isFirstStation(stationId)) {
-            deleteFirst();
-        } else if (isLastStation(stationId)){
-            deleteLast();
-        } else {
-            deleteMiddle(stationId);
-        }
-
+        deleteToPosition(stationId);
         arrangePosition();
     }
 
-    private boolean isFirstStation(Long stationId) {
-        return getFirstSection().isSameUpStation(stationId);
-    }
+    private void deleteToPosition(Long stationId) {
+        if (isFirstStation(stationId)) {
+            deleteFirst();
+            return;
+        }
 
-    private boolean isLastStation(Long stationId) {
-        return getLastSection().isSameDownStation(stationId);
+        if (isLastStation(stationId)){
+            deleteLast();
+            return;
+        }
+
+        deleteMiddle(stationId);
     }
 
     private void deleteFirst() {
@@ -128,6 +132,14 @@ public class LineSections implements Iterable<LineSection> {
 
     public int size() {
         return data.size();
+    }
+
+    private boolean isFirstStation(Long stationId) {
+        return getFirstSection().isSameUpStation(stationId);
+    }
+
+    private boolean isLastStation(Long stationId) {
+        return getLastSection().isSameDownStation(stationId);
     }
 
     public LineSection getFirstSection() {
