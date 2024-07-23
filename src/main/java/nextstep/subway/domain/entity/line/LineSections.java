@@ -92,7 +92,7 @@ public class LineSections implements Iterable<LineSection> {
         }
 
         if (!containsStation(stationId)) {
-            throw new InvalidStationException("노선에 존재하지 않는 역입니다.");
+            throw new NotFoundStationOnLineException("노선에 존재하지 않는 역입니다.");
         }
 
         deleteToPosition(stationId);
