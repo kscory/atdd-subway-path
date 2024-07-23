@@ -125,7 +125,7 @@ public class LineSections implements Iterable<LineSection> {
         LineSection frontSection = getSectionByDownStationIdOrThrow(stationId);
         LineSection backSection = getSectionByUpStationIdOrThrow(stationId);
 
-        data.add(data.indexOf(frontSection), frontSection.join(backSection));
+        data.add(data.indexOf(frontSection), frontSection.joinNext(backSection));
         data.remove(frontSection);
         data.remove(backSection);
     }

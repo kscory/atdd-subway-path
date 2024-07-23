@@ -56,12 +56,12 @@ public class LineSection {
         return List.of(first, second);
     }
 
-    public LineSection join(LineSection back) {
+    public LineSection joinNext(LineSection nextSection) {
         return new LineSection(
                 line,
                 upStationId,
-                back.getDownStationId(),
-                getDistance() + back.getDistance()
+                nextSection.getDownStationId(),
+                distance + nextSection.getDistance()
         );
     }
 
